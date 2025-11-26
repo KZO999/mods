@@ -13,7 +13,7 @@ GITHUB_REPO = "KZO999/mods"
 GITHUB_FOLDER = ""
 
 # NeoForge Config
-NEOFORGE_VERSION = "21.1.65"
+NEOFORGE_VERSION = "21.1.215"
 NEOFORGE_URL = f"https://maven.neoforged.net/releases/net/neoforged/neoforge/{NEOFORGE_VERSION}/neoforge-{NEOFORGE_VERSION}-installer.jar"
 
 # Java 21 Links (Adoptium)
@@ -149,4 +149,5 @@ def main():
     print("\nInstallation Complete!")
 
 if __name__ == "__main__":
+
     main()
