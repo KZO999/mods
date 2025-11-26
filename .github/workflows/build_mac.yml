@@ -3,8 +3,8 @@ name: Build Mac Installer
 on:
   push:
     paths:
-      - 'mac_installer.py' # Runs whenever you update the script
-  workflow_dispatch:       # Allows you to click a button to run manually
+      - 'mac_installer.py'
+  workflow_dispatch:
 
 jobs:
   build:
@@ -24,11 +24,22 @@ jobs:
 
     - name: Build Application
       run: |
-        # Build the standalone executable
-        pyinstaller --onefile --console --name "ModInstaller" mac_installer.py
+        # 1. Build the raw executable (internal tool)
+        pyinstaller --onefile --console --name "mod_installer_tool" mac_installer.py
+
+        # 2. Create a user-friendly launcher script
+        # The .command extension tells Mac to run this in Terminal when clicked
+        echo '#!/bin/bash' > dist/Install_Mods.command
+        echo 'cd "$(dirname "$0")"' >> dist/Install_Mods.command
+        echo 'echo "Starting Installer..."' >> dist/Install_Mods.command
+        echo './mod_installer_tool' >> dist/Install_Mods.command
+        
+        # 3. Make both files executable
+        chmod +x dist/mod_installer_tool
+        chmod +x dist/Install_Mods.command
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: Mac-Mod-Installer
-        path: dist/ModInstaller
+        name: Mac-Mod-Installer-Clickable
+        path: dist/
