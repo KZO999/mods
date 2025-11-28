@@ -25,22 +25,10 @@ jobs:
 
     - name: Build Application
       run: |
-        # Build the executable as a Mac App Bundle (.app)
-        # --windowed means no terminal window, but for this installer we usually WANT 
-        # the terminal so users can see progress.
-        # We will use --console so the terminal opens.
-        pyinstaller --clean --onefile --console --name "ModInstaller" mac_installer.py
+        pyinstaller --clean --onefile --windowed --name "ModInstaller" mac_installer.py
 
-        # Prepare a folder for the DMG content
         mkdir -p dist/dmg_content
-        cp dist/ModInstaller dist/dmg_content/ModInstaller_RunMe
-
-        # Create a simple launcher script to ensure it opens in Terminal
-        echo '#!/bin/bash' > dist/dmg_content/Install_Mods.command
-        echo 'DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"' >> dist/dmg_content/Install_Mods.command
-        echo '"$DIR/ModInstaller_RunMe"' >> dist/dmg_content/Install_Mods.command
-        chmod +x dist/dmg_content/Install_Mods.command
-        chmod +x dist/dmg_content/ModInstaller_RunMe
+        cp -r dist/ModInstaller.app dist/dmg_content/
 
     - name: Create DMG
       run: |
@@ -49,8 +37,8 @@ jobs:
           --window-pos 200 120 \
           --window-size 600 300 \
           --icon-size 100 \
-          --icon "Install_Mods.command" 175 120 \
-          --hide-extension "Install_Mods.command" \
+          --app-drop-link 400 120 \
+          --icon "ModInstaller.app" 175 120 \
           "dist/Mod_Installer.dmg" \
           "dist/dmg_content/"
 
