@@ -1,4 +1,4 @@
-name: Build Mac Installer
+name: Build Mac Installer DMG
 
 on:
   push:
@@ -21,25 +21,41 @@ jobs:
     - name: Install Dependencies
       run: |
         pip install requests pyinstaller
+        brew install create-dmg
 
     - name: Build Application
       run: |
-        # 1. Build the raw executable (internal tool)
-        pyinstaller --onefile --console --name "mod_installer_tool" mac_installer.py
+        # Build the executable as a Mac App Bundle (.app)
+        # --windowed means no terminal window, but for this installer we usually WANT 
+        # the terminal so users can see progress.
+        # We will use --console so the terminal opens.
+        pyinstaller --clean --onefile --console --name "ModInstaller" mac_installer.py
 
-        # 2. Create a user-friendly launcher script
-        # The .command extension tells Mac to run this in Terminal when clicked
-        echo '#!/bin/bash' > dist/Install_Mods.command
-        echo 'cd "$(dirname "$0")"' >> dist/Install_Mods.command
-        echo 'echo "Starting Installer..."' >> dist/Install_Mods.command
-        echo './mod_installer_tool' >> dist/Install_Mods.command
-        
-        # 3. Make both files executable
-        chmod +x dist/mod_installer_tool
-        chmod +x dist/Install_Mods.command
+        # Prepare a folder for the DMG content
+        mkdir -p dist/dmg_content
+        cp dist/ModInstaller dist/dmg_content/ModInstaller_RunMe
 
-    - name: Upload Artifact
+        # Create a simple launcher script to ensure it opens in Terminal
+        echo '#!/bin/bash' > dist/dmg_content/Install_Mods.command
+        echo 'DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"' >> dist/dmg_content/Install_Mods.command
+        echo '"$DIR/ModInstaller_RunMe"' >> dist/dmg_content/Install_Mods.command
+        chmod +x dist/dmg_content/Install_Mods.command
+        chmod +x dist/dmg_content/ModInstaller_RunMe
+
+    - name: Create DMG
+      run: |
+        create-dmg \
+          --volname "Mod Installer" \
+          --window-pos 200 120 \
+          --window-size 600 300 \
+          --icon-size 100 \
+          --icon "Install_Mods.command" 175 120 \
+          --hide-extension "Install_Mods.command" \
+          "dist/Mod_Installer.dmg" \
+          "dist/dmg_content/"
+
+    - name: Upload DMG Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: Mac-Mod-Installer-Clickable
-        path: dist/
+        name: Mod-Installer-DMG
+        path: dist/Mod_Installer.dmg
